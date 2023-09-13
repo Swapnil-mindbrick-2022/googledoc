@@ -1,43 +1,58 @@
 import { useState } from "react";
-// import { useHistory } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase.js"; // Import your Firebase auth instance
 import toast from "react-hot-toast";
 import Layout from "../components/Layout.jsx";
-import logo from "../assets/logo.jpeg"
+import logo from "../assets/logo.jpeg";
+import { doc, getDoc, collection, query, where } from "firebase/firestore";
+import { db } from "../firebase.js";
+
 const Login = () => {
-  // const history = useHistory();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-
+  // const history = useHistory();
   const handleLogin = async (e) => {
     e.preventDefault();
-
+  
     try {
       // Sign in with email and password
-      const data = await signInWithEmailAndPassword(auth, email, password);
-
-      // If successful, you can retrieve user data from Firebase Firestore here
-      // Example: Fetch user data from Firestore using the user's UID
-
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  
+      // If successful, retrieve the user's role from Firestore
+      const user = userCredential.user;
+      const userUid = user.uid;
+  
+      // Get the user's document from Firestore using the user's UID
+      const userDocRef = doc(db, "users", userUid);
+      const userDocSnapshot = await getDoc(userDocRef);
+  
+      if (userDocSnapshot.exists()) {
+        const userData = userDocSnapshot.data();
+        
+        if (userData.role === "Admin") {
+          // Redirect to /admin if the user is an admin
+          navigate("/admin");  
+        } else {
+          // Redirect to / for other users
+          navigate("/");
+        }
+      } else {
+        // Handle case where user data is not found
+        console.error("User data not found in Firestore.");
+        toast.error("User data not found. Please contact support.");
+        // You can also consider logging the user out at this point
+        // auth.signOut();
+      }
+  
       // Show a success toast message
       toast.success("Login successful!");
-      console.log("login successfully")
-      console.log(data)
-      
-
-      // Redirect to a different page upon successful login
-      // You can use the useHistory hook or React Router for navigation
-      // Example: history.push("/dashboard");
-      navigate('/')
     } catch (error) {
       console.error("Firebase authentication error:", error);
       toast.error("Login failed. Please check your email and password.");
     }
   };
-
   return (
    <Layout title="Login">
    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
