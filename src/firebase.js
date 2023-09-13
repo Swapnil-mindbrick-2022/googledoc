@@ -5,12 +5,13 @@ import { getStorage } from "firebase/storage";
 
 
 const firebaseConfig = {
+    // eslint-disable-next-line no-undef
     apiKey:process.env.REACT_APP_FIREBASE_KEY,
-    authDomain: "doc-3f582.firebaseapp.com",
-    projectId: "doc-3f582",
-    storageBucket: "doc-3f582.appspot.com",
-    messagingSenderId: "240290856618",
-    appId: "1:240290856618:web:361f922d449020918a9ad3",
+    authDomain: process.env.REACT_APP_FIREBASE_KEY,
+    projectId: process.env.REACT_APP_FIREBASE_KEY,
+    storageBucket: process.env.REACT_APP_FIREBASE_KEY,
+    messagingSenderId: process.env.REACT_APP_FIREBASE_KEY,
+    appId: process.env.REACT_APP_FIREBASE_KEY,
     measurementId: "G-364WP6ZVLD"
   };
 

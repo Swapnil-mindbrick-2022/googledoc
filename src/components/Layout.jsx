@@ -21,7 +21,7 @@ const Layout = ({children,title,description,keywords,authors}) =>{
                
             </Helmet>
             <Header/>
-            <main style={{minHeight:"100vh" , }}>
+            <main style={{minHeight:"50vh" , }}>
             <Toaster />
             {children}
             </main>
