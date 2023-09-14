@@ -1,51 +1,63 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../firebase'; // assuming you have a firebase.js file that exports your Firestore instance
+import { db } from '../firebase';
 import Layout from '../components/Layout';
-import mammoth from 'mammoth';
-import { collection, getDocs } from 'firebase/firestore'; // Import mammoth library
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import { collection, getDocs, query, where, doc, updateDoc } from 'firebase/firestore';
+
+const modules = {
+  toolbar: [
+    ['bold', 'italic', 'underline', 'strike'], 
+    ['blockquote', 'code-block'],
+    [{ 'header': 1 }, { 'header': 2 }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'script': 'sub'}, { 'script': 'super' }],
+    [{ 'indent': '-1'}, { 'indent': '+1' }],
+    [{ 'direction': 'rtl' }],
+    [{ 'size': ['small', false, 'large', 'huge'] }],
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'font': [] }],
+    [{ 'align': [] }],
+    ['clean'],
+    ['image', 'video'],
+  ],
+};
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
   const [userDocs, setUserDocs] = useState([]);
+  const [selectedDoc, setSelectedDoc] = useState(null);
 
- 
   useEffect(() => {
     const fetchUsers = async () => {
       const usersCollection = collection(db, 'users');
       const userSnapshot = await getDocs(usersCollection);
       setUsers(userSnapshot.docs.map(doc => doc.data()));
-  
+
       const userDocsCollection = collection(db, 'userDocs');
-      const userDocsSnapshot = await getDocs(userDocsCollection);
-      setUserDocs(userDocsSnapshot.docs.map(doc => doc.data()));
+      const q = query(userDocsCollection, where("userId", "!=", "admin")); // Replace "admin" with the admin's user ID
+      const userDocsSnapshot = await getDocs(q);
+      setUserDocs(userDocsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     };
-  
+
     fetchUsers();
   }, []);
 
-  // Function to convert HTML content to Word (.docx) format
-  const convertToDocx = (htmlContent, fileName) => {
-    const options = {
-      styleMap: [
-        "p[style-name='Heading 1'] => h1:fresh",
-        "p[style-name='Heading 2'] => h2:fresh",
-        "p[style-name='Heading 3'] => h3:fresh",
-      ],
-    };
+  const handleSelectDoc = (doc) => {
+    setSelectedDoc(doc);
+  };
 
-    mammoth.convertToHtml(htmlContent, options)
-      .then((result) => {
-        const blob = new Blob([result.value], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${fileName}.docx`;
-        a.click();
-        URL.revokeObjectURL(url);
-      })
-      .catch((error) => {
-        console.error('Error converting to Word document:', error);
-      });
+  const handleContentChange = (content) => {
+    setSelectedDoc({ ...selectedDoc, content });
+  };
+
+  const handleSave = async () => {
+    const docRef = doc(db, "userDocs", selectedDoc.id);
+    await updateDoc(docRef, {
+      content: selectedDoc.content
+    });
+    alert('Content saved successfully!');
   };
 
   return (
@@ -63,13 +75,28 @@ const Admin = () => {
         <h2>User Docs</h2>
         {userDocs.map((doc, index) => (
           <div key={index}>
-            <button
-              onClick={() => convertToDocx(doc.content, `UserDoc_${index}`)}
-            >
-              Download as Word
+            <button onClick={() => handleSelectDoc(doc)}>
+              View Document
             </button>
           </div>
         ))}
+        {selectedDoc && (
+          <div className="p-6 bg-white shadow-md rounded-md">
+            <ReactQuill 
+              theme="snow" 
+              modules={modules} 
+              value={selectedDoc.content} 
+              onChange={handleContentChange} 
+              className="text-black h-[500px] border border-gray-300 p-2"
+            />
+            <button 
+              onClick={handleSave} 
+              className="mt-10 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Save
+            </button>
+          </div>
+        )}
       </div>
     </Layout>
   );

@@ -24,7 +24,7 @@ const Home = () => {
 
   const createDocument = async () => {
     if (!user) {
-      alert('Please login');
+      alert('Please log in');
       return;
     }
   
@@ -35,27 +35,35 @@ const Home = () => {
         createdAt: Date.now(),
         userId: user.uid, // Store the user UID
       });
-      console.log("Document created with ID: ", docRef.id);
+      console.log("Document created with ID:", docRef.id);
       setDocId(docRef.id);
   
       // Store docId in local storage
       localStorage.setItem('docId', docRef.id);
     } catch (e) {
-      console.error("Error adding document: ", e);
+      console.error("Error adding document:", e);
     }
   };
+
+  const resetDocument = () => {
+    setDocId(null); // Reset the docId to null
+  };
+
   return (
     <Layout title="home-page">
-      {docId ? (
-        // Document is open, hide the "Create Document" button
-        <Document docId={docId} />
-      ) : (
-        // Document is not open, show the "Create Document" button
-        <>
+      <div>
+        {docId ? (
+          // Document is open, display the "Create Document" button
+          <Document docId={docId} />
+        ) : (
+          // Document is not open, show the "Create Document" button
           <button onClick={createDocument}>Create Document</button>
-          {user && docId && <Document docId={docId} />}
-        </>
-      )}
+        )}
+        {docId && (
+          // If a document is open, provide an option to reset it
+          <button onClick={resetDocument}>Back to Home</button>
+        )}
+      </div>
     </Layout>
   );
 }

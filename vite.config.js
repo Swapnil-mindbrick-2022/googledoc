@@ -7,4 +7,7 @@ export default defineConfig({
   
    // Enable environment variable loading from .env files
    envDir: './src/',
+  optimizeDeps: {
+    include: ['quill', 'react-quill', 'quill-table-module'],
+  },
 })
