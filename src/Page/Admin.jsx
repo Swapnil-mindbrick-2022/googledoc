@@ -4,6 +4,14 @@ import Layout from '../components/Layout';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { collection, getDocs, query, where, doc, updateDoc } from 'firebase/firestore';
+// import "react-responsive-carousel/lib/styles/carousel.min.css"; // Import carousel styles
+// import { Carousel } from 'react-responsive-carousel';
+// import backgroundImg from '../assets/polygon-scatter-haikei.svg';
+
+import Carousel from "react-multi-carousel";
+import "react-multi-carousel/lib/styles.css";
+import {responsive} from "./Data.js"
+
 
 const modules = {
   toolbar: [
@@ -23,6 +31,12 @@ const modules = {
     ['image', 'video'],
   ],
 };
+// const adminContainerStyle = {
+//   backgroundImage: `url(${backgroundImg})`,
+//   backgroundRepeat: 'no-repeat',
+//   backgroundSize: 'cover', // Adjust as needed
+//   backgroundPosition: 'center', // Adjust as needed
+// };
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -33,12 +47,26 @@ const Admin = () => {
     const fetchUsers = async () => {
       const usersCollection = collection(db, 'users');
       const userSnapshot = await getDocs(usersCollection);
-      setUsers(userSnapshot.docs.map(doc => doc.data()));
+      const allUsers = userSnapshot.docs.reduce((acc, doc) => {
+        const userData = doc.data();
+        console.log(userData)
+        acc[userData.uid] = userData; // Store user data by uid
+        return acc;
+      }, {});
 
       const userDocsCollection = collection(db, 'userDocs');
-      const q = query(userDocsCollection, where("userId", "!=", "admin")); // Replace "admin" with the admin's user ID
+      const q = query(userDocsCollection, where("userId", "!=", "Admin")); // Replace "admin" with the admin's user ID
       const userDocsSnapshot = await getDocs(q);
-      setUserDocs(userDocsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const userDocsData = userDocsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Map userDocs data to include userImage and username from users collection
+      const userDocsWithUserData = userDocsData.map(doc => ({
+        ...doc,
+        photoURL: allUsers[doc.userId]?.photoURL,
+        displayName: allUsers[doc.userId]?.displayName,
+      }));
+
+      setUserDocs(userDocsWithUserData);
     };
 
     fetchUsers();
@@ -61,44 +89,57 @@ const Admin = () => {
   };
 
   return (
-    <Layout title='admin'>
-      <div> admin page </div>
-      <div>
+    <Layout title='admin' >
+    <div className="admin-container" >
+      <div className="users-container" >
         <h2>Users</h2>
-        {users.map((user, index) => (
-          <div key={index}>
-            {/* Render your user data here */}
-          </div>
-        ))}
+        {/* Render user data... */}
       </div>
-      <div>
+      <div className="docs-container">
         <h2>User Docs</h2>
-        {userDocs.map((doc, index) => (
-          <div key={index}>
-            <button onClick={() => handleSelectDoc(doc)}>
-              View Document
-            </button>
-          </div>
-        ))}
+        <Carousel
+        showDots={true}
+        responsive={responsive}
+        infinite={true}
+        //   autoPlay={this.props.deviceType !== "mobile" ? true : false}
+        autoPlay={true}
+        autoPlaySpeed={1000}
+        customTransition="all 500ms ease"
+        transitionDuration={1000}
+
+        
+        >
+          {userDocs.map((doc, index) => (
+            <div key={index} onClick={() => handleSelectDoc(doc)}>
+              <img
+                src={doc.photoURL}
+                alt={doc.displayName}
+                style={{ height: '200px', width: 'auto' }} // Adjust image height and width
+              />
+              <p className="legend" style={{width:"full"}}>{doc.displayName}</p>
+            </div>
+          ))}
+        </Carousel>
         {selectedDoc && (
-          <div className="p-6 bg-white shadow-md rounded-md">
-            <ReactQuill 
-              theme="snow" 
-              modules={modules} 
-              value={selectedDoc.content} 
-              onChange={handleContentChange} 
-              className="text-black h-[500px] border border-gray-300 p-2"
+          <div className="doc-editor">
+            <ReactQuill
+              theme="snow"
+              modules={modules}
+              value={selectedDoc.content}
+              onChange={handleContentChange}
+              className="text-black"
             />
-            <button 
-              onClick={handleSave} 
-              className="mt-10 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            <button
+              onClick={handleSave}
+              className="save-button"
             >
               Save
             </button>
           </div>
         )}
       </div>
-    </Layout>
+    </div>
+  </Layout>
   );
 };
 
