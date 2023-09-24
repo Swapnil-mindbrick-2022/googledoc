@@ -3,3 +3,8 @@
 @tailwind utilities;
 
 
+.ck-editor__editable {
+  min-height: 800px;
+}
+
+

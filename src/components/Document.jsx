@@ -1,184 +1,95 @@
-// import React, { useState, useEffect } from 'react';
-// import ReactQuill from 'react-quill';
-// import 'react-quill/dist/quill.snow.css';
-// import { doc, updateDoc, getDoc } from 'firebase/firestore';
-// import { db } from '../firebase.js';
-// const modules = {
-//   toolbar: [
-//     ['bold', 'italic', 'underline', 'strike'], // toggled buttons
-//     ['blockquote', 'code-block'],
-//     // [{ 'table': 'table' }], // Add table option
-//     [{ 'header': 1 }, { 'header': 2 }], // custom button values
-//     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-//     [{ 'script': 'sub'}, { 'script': 'super' }], // superscript/subscript
-//     [{ 'indent': '-1'}, { 'indent': '+1' }], // outdent/indent
-//     [{ 'direction': 'rtl' }], // text direction
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { db } from "../firebase";
+import Layout from "./Layout";
+import SunEditor from "suneditor-react";
+import "suneditor/dist/css/suneditor.min.css"; // Import Sun Editor's CSS File
 
-//     [{ 'size': ['small', false, 'large', 'huge'] }], // custom dropdown
-//     [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-
-//     [{ 'color': [] }, { 'background': [] }], // dropdown with defaults from theme
-//     [{ 'font': [] }],
-//     [{ 'align': [] }],
-
-//     ['clean'], // remove formatting button
-
-//     ['image', 'video'], // link and image, video
-//   ],
-// };
-
-
-// const Document = ({ docId }) => {
-//   const [value, setValue] = useState('');
-
-//   useEffect(() => {
-//     // Try to retrieve content from local storage
-//     const localContent = localStorage.getItem(`docContent-${docId}`);
-//     if (localContent) {
-//       setValue(localContent);
-//     } else {
-//       // If not found in local storage, fetch from Firestore
-//       fetchDoc();
-//     }
-//   }, [docId]);
-
-//   useEffect(() => {
-//     // Update local storage whenever the value changes
-//     localStorage.setItem(`docContent-${docId}`, value);
-//   }, [docId, value]);
-
-//   const fetchDoc = async () => {
-//     const docRef = doc(db, "userDocs", docId);
-//     const docSnap = await getDoc(docRef);
-
-//     if (docSnap.exists()) {
-//       setValue(docSnap.data().content);
-//     } else {
-//       console.log("No such document!");
-//     }
-//   };
-
-//   const handleBlur = async () => {
-//     const docRef = doc(db, "userDocs", docId);
-
-//     await updateDoc(docRef, {
-//       content: value
-//     });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     // Append the new content to the existing value
-//     await handleBlur();
-//     // Optionally, show a success message to the user
-//     alert('Content saved successfully!');
-//   };
-
-//   return (
-//     <div className="p-6 bg-white shadow-md rounded-md">
-//     <ReactQuill 
-//       theme="snow" 
-//       modules={modules} 
-//       value={value} 
-//       onChange={setValue} 
-//       onBlur={handleBlur} 
-//       className="text-black h-[900px] border border-gray-300 p-2"
-//     />
-//     <button 
-//       onClick={handleSubmit} 
-//       className="mt-20 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-//     >
-//       Submit
-//     </button>
-//   </div>
-//   );
-// }
-
-// export default Document;
-
-
-
-
-
-
-
-
-
-
-
-import React, { useState, useEffect } from 'react';
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase.js';
-
-const Document = ({ docId }) => {
-  const [value, setValue] = useState('');
+const Document = () => {
+  const { docId } = useParams();
+  const [value, setValue] = useState("");
 
   useEffect(() => {
-    // Try to retrieve content from local storage
-    const localContent = localStorage.getItem(`docContent-${docId}`);
-    if (localContent) {
-      setValue(localContent);
-    } else {
-      // If not found in local storage, fetch from Firestore
-      fetchDoc();
-    }
+    const fetchDoc = async () => {
+      const docRef = doc(db, "userDocs", docId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        setValue(docSnap.data().content);
+      } else {
+        console.log("No such document!");
+      }
+    };
+
+    fetchDoc();
   }, [docId]);
-
-  useEffect(() => {
-    // Update local storage whenever the value changes
-    localStorage.setItem(`docContent-${docId}`, value);
-  }, [docId, value]);
-
-  const fetchDoc = async () => {
-    const docRef = doc(db, "userDocs", docId);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      setValue(docSnap.data().content);
-    } else {
-      console.log("No such document!");
-    }
-  };
 
   const handleBlur = async () => {
     const docRef = doc(db, "userDocs", docId);
 
     await updateDoc(docRef, {
-      content: value
+      content: value,
     });
+  };
+
+  const handleEditorChange = (content) => {
+    setValue(content);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Append the new content to the existing value
     await handleBlur();
-    // Optionally, show a success message to the user
-    alert('Content saved successfully!');
+    alert("Content saved successfully!");
   };
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-md">
-      <CKEditor
-        editor={ ClassicEditor }
-        data={value}
-        
-        
-        onChange={ ( event, editor ) => {
-          const data = editor.getData();
-          setValue(data);
-        } }
-        onBlur={handleBlur}
-      />
-      <button 
-        onClick={handleSubmit} 
-        className="mt-20 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
-        Submit
-      </button>
-    </div>
+    <Layout title="Document Editor">
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center">
+        <div className="bg-white p-4 rounded-lg shadow-lg max-w-screen-xl w-full border border-gray-300 flex-1 flex flex-col relative">
+          <h2 className="text-3xl font-semibold mb-4 text-gray-800">
+            Edit Document
+          </h2>
+          <div className="border border-gray-300 p-4 rounded-lg h-[820px] w-full">
+            <SunEditor
+              setContents={value}
+              onChange={handleEditorChange}
+              setOptions={{
+                height: 400,
+                buttonList: [
+                  ["undo", "redo"],
+                  ["font", "fontSize", "formatBlock"],
+                  ["paragraphStyle", "blockquote"],
+                  [
+                    "bold",
+                    "underline",
+                    "italic",
+                    "strike",
+                    "subscript",
+                    "superscript",
+                  ],
+                  ["fontColor", "hiliteColor", "textStyle"],
+                  ["removeFormat"],
+                  ["outdent", "indent"],
+                  ["align", "horizontalRule", "list", "lineHeight"],
+                  ["table", "link", "image", "video"],
+                  ["fullScreen", "showBlocks", "codeView"],
+                  ["preview", "print"],
+                  ["save", "template"],
+                ],
+              }}
+            />
+          </div>
+          <button
+            className="absolute top-4 right-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            onClick={handleSubmit}
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </Layout>
   );
-}
+};
 
 export default Document;

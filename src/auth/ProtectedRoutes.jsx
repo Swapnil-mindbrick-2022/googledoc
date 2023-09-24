@@ -1,8 +1,9 @@
-import { Route, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase.js'; // Import your Firebase auth instance
 import { useState, useEffect } from 'react';
 
+// eslint-disable-next-line react/prop-types
 const ProtectedRoute = ({ element, ...rest }) => {
   const [isAuth, setIsAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,7 +22,7 @@ const ProtectedRoute = ({ element, ...rest }) => {
     return <div>Loading...</div>; // Or a loading spinner
   }
 
-  return isAuth ? <Route {...rest} element={element} /> : <Navigate to="/login" />;
+  return isAuth ? element : <Navigate to="/login" />;
 };
 
 export default ProtectedRoute;
