@@ -1,18 +1,36 @@
-import { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, storage } from '../firebase';
+import { db, storage } from '../firebase'; // Assuming you've imported Firebase correctly
 import SunEditor from 'suneditor-react';
 import 'suneditor/dist/css/suneditor.min.css'; // Import Sun Editor's CSS File
 import Layout from '../components/Layout';
-import { getDownloadURL, ref, uploadString } from 'firebase/storage';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage'; // Add these imports
 
-function DocumentEditor() {
+function DocumentEditorrr() {
   const { docId } = useParams();
   const [documentContent, setDocumentContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Function to fetch documents using the Firebase Cloud Function
+  async function fetchDocument(documentURL) {
+    try {
+      const response = await fetch(`https://us-central1-doc-3f582.cloudfunctions.net/fetchDocument?docId=${documentURL}`);
+      if (!response.ok) {
+        const errorMessage = `Failed to fetch document: ${response.statusText}`;
+        console.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+  
+      const text = await response.text();
+      return text;
+    } catch (error) {
+      console.error('Error fetching document:', error);
+      throw error;
+    }
+  }
+  
   useEffect(() => {
     const fetchDocumentContent = async () => {
       const documentRef = doc(db, 'userDocs', docId);
@@ -23,13 +41,7 @@ function DocumentEditor() {
         const documentURL = documentData.content;
 
         try {
-          const response = await fetch(documentURL);
-
-          if (!response.ok) {
-            throw new Error(`Failed to fetch document: ${response.statusText}`);
-          }
-
-          const text = await response.text();
+          const text = await fetchDocument(documentURL);
           setDocumentContent(text);
           setLoading(false);
         } catch (error) {
@@ -104,7 +116,12 @@ function DocumentEditor() {
               />
             </div>
             <div>
-              <button   className="absolute top-4 right-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onClick={handleBlur}>Save</button>
+              <button
+                className="absolute top-4 right-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                onClick={handleBlur}
+              >
+                Save
+              </button>
             </div>
           </>
         )}
@@ -113,4 +130,4 @@ function DocumentEditor() {
   );
 }
 
-export default DocumentEditor;
+export default DocumentEditorrr;

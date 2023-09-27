@@ -1,19 +1,26 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+const functions = require("firebase-functions");
+const fetch = require("node-fetch");
 
-const {onRequest} = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
+const cors = require("cors")({origin: true});
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+exports.fetchDocument = functions.https.onRequest(async (req, res) => {
+  cors(req, res, async () => {
+    try {
+      const docId = req.query.docId; // The document ID or path
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+      // Construct the URL to fetch the document from Firebase Storage
+      const storageUrl = `https://firebasestorage.googleapis.com/v0/b/${process.env.FIREBASE_STORAGE_BUCKET}/o/documents%2F${docId}?alt=media`;
+
+      const response = await fetch(storageUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch document: ${response.statusText}`);
+      }
+
+      const text = await response.text();
+      res.send(text);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Failed to fetch document");
+    }
+  });
+});

@@ -43,7 +43,6 @@ const Home = () => {
     } else {
       try {
         const docRef = await addDoc(collection(db, 'userDocs'), {
-          content: '',
           createdAt: Date.now(),
           userId: user.uid,
           name: docName,

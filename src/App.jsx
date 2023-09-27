@@ -8,6 +8,7 @@ import FoldersList from "./Page/FoldersList";
 import Folder from "./Page/Folder";
 import DocumentEditor from "./Page/DocumentEditor";
 import Document from "./components/Document";
+// import DocumentEditorrr from "./Page/DocumentEditorrr";
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<FoldersList />} />
           <Route path="/admin/folder/:userId" element={<Folder />} />
-          <Route path="/admin/edit/:docId" element={<DocumentEditor />} />
+         {/* <Route path="/admin/edit/:docId" element={<DocumentEditor />} />*/} <Route path="/admin/edit/:docId" element={<DocumentEditor />} />
           <Route
             path="/user/edit/:docId"
             element={<ProtectedRoute element={<Document />} />}
